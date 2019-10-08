@@ -1,0 +1,730 @@
+
+state 0
+	$accept: .program $end 
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'!'  shift 6
+	'('  shift 11
+	.  error
+
+	exprs  goto 2
+	expr  goto 3
+	binary_expr  goto 4
+	unary_expr  goto 5
+	term  goto 7
+	invocation  goto 12
+	number  goto 8
+	program  goto 1
+
+state 1
+	$accept:  program.$end 
+
+	$end  accept
+	.  error
+
+
+state 2
+	program:  exprs.    (1)
+	exprs:  exprs.';' expr 
+
+	';'  shift 15
+	.  reduce 1 (src line 37)
+
+
+state 3
+	exprs:  expr.    (3)
+
+	.  reduce 3 (src line 40)
+
+
+state 4
+	expr:  binary_expr.    (4)
+	binary_expr:  binary_expr.AND binary_expr 
+	binary_expr:  binary_expr.OR binary_expr 
+	binary_expr:  binary_expr.'<' binary_expr 
+	binary_expr:  binary_expr.LE binary_expr 
+	binary_expr:  binary_expr.'>' binary_expr 
+	binary_expr:  binary_expr.GE binary_expr 
+	binary_expr:  binary_expr.EQ binary_expr 
+	binary_expr:  binary_expr.'+' binary_expr 
+	binary_expr:  binary_expr.'-' binary_expr 
+	binary_expr:  binary_expr.'*' binary_expr 
+	binary_expr:  binary_expr.'/' binary_expr 
+
+	OR  shift 17
+	AND  shift 16
+	'<'  shift 18
+	LE  shift 19
+	'>'  shift 20
+	GE  shift 21
+	EQ  shift 22
+	'+'  shift 23
+	'-'  shift 24
+	'*'  shift 25
+	'/'  shift 26
+	.  reduce 4 (src line 42)
+
+
+state 5
+	binary_expr:  unary_expr.    (5)
+
+	.  reduce 5 (src line 44)
+
+
+state 6
+	unary_expr:  '!'.term 
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'('  shift 11
+	.  error
+
+	term  goto 27
+	invocation  goto 12
+	number  goto 8
+
+state 7
+	unary_expr:  term.    (18)
+	invocation:  term.'(' opt_params ')' 
+
+	'('  shift 28
+	.  reduce 18 (src line 58)
+
+
+state 8
+	term:  number.    (19)
+
+	.  reduce 19 (src line 60)
+
+
+state 9
+	term:  STRING.    (20)
+
+	.  reduce 20 (src line 61)
+
+
+state 10
+	term:  ID.    (21)
+
+	.  reduce 21 (src line 62)
+
+
+state 11
+	term:  '('.expr ')' 
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'!'  shift 6
+	'('  shift 11
+	.  error
+
+	expr  goto 29
+	binary_expr  goto 4
+	unary_expr  goto 5
+	term  goto 7
+	invocation  goto 12
+	number  goto 8
+
+state 12
+	term:  invocation.    (23)
+
+	.  reduce 23 (src line 64)
+
+
+state 13
+	number:  '-'.NUMBER 
+
+	NUMBER  shift 30
+	.  error
+
+
+state 14
+	number:  NUMBER.    (25)
+
+	.  reduce 25 (src line 67)
+
+
+state 15
+	exprs:  exprs ';'.expr 
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'!'  shift 6
+	'('  shift 11
+	.  error
+
+	expr  goto 31
+	binary_expr  goto 4
+	unary_expr  goto 5
+	term  goto 7
+	invocation  goto 12
+	number  goto 8
+
+state 16
+	binary_expr:  binary_expr AND.binary_expr 
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'!'  shift 6
+	'('  shift 11
+	.  error
+
+	binary_expr  goto 32
+	unary_expr  goto 5
+	term  goto 7
+	invocation  goto 12
+	number  goto 8
+
+state 17
+	binary_expr:  binary_expr OR.binary_expr 
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'!'  shift 6
+	'('  shift 11
+	.  error
+
+	binary_expr  goto 33
+	unary_expr  goto 5
+	term  goto 7
+	invocation  goto 12
+	number  goto 8
+
+state 18
+	binary_expr:  binary_expr '<'.binary_expr 
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'!'  shift 6
+	'('  shift 11
+	.  error
+
+	binary_expr  goto 34
+	unary_expr  goto 5
+	term  goto 7
+	invocation  goto 12
+	number  goto 8
+
+state 19
+	binary_expr:  binary_expr LE.binary_expr 
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'!'  shift 6
+	'('  shift 11
+	.  error
+
+	binary_expr  goto 35
+	unary_expr  goto 5
+	term  goto 7
+	invocation  goto 12
+	number  goto 8
+
+state 20
+	binary_expr:  binary_expr '>'.binary_expr 
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'!'  shift 6
+	'('  shift 11
+	.  error
+
+	binary_expr  goto 36
+	unary_expr  goto 5
+	term  goto 7
+	invocation  goto 12
+	number  goto 8
+
+state 21
+	binary_expr:  binary_expr GE.binary_expr 
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'!'  shift 6
+	'('  shift 11
+	.  error
+
+	binary_expr  goto 37
+	unary_expr  goto 5
+	term  goto 7
+	invocation  goto 12
+	number  goto 8
+
+state 22
+	binary_expr:  binary_expr EQ.binary_expr 
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'!'  shift 6
+	'('  shift 11
+	.  error
+
+	binary_expr  goto 38
+	unary_expr  goto 5
+	term  goto 7
+	invocation  goto 12
+	number  goto 8
+
+state 23
+	binary_expr:  binary_expr '+'.binary_expr 
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'!'  shift 6
+	'('  shift 11
+	.  error
+
+	binary_expr  goto 39
+	unary_expr  goto 5
+	term  goto 7
+	invocation  goto 12
+	number  goto 8
+
+state 24
+	binary_expr:  binary_expr '-'.binary_expr 
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'!'  shift 6
+	'('  shift 11
+	.  error
+
+	binary_expr  goto 40
+	unary_expr  goto 5
+	term  goto 7
+	invocation  goto 12
+	number  goto 8
+
+state 25
+	binary_expr:  binary_expr '*'.binary_expr 
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'!'  shift 6
+	'('  shift 11
+	.  error
+
+	binary_expr  goto 41
+	unary_expr  goto 5
+	term  goto 7
+	invocation  goto 12
+	number  goto 8
+
+state 26
+	binary_expr:  binary_expr '/'.binary_expr 
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'!'  shift 6
+	'('  shift 11
+	.  error
+
+	binary_expr  goto 42
+	unary_expr  goto 5
+	term  goto 7
+	invocation  goto 12
+	number  goto 8
+
+state 27
+	unary_expr:  '!' term.    (17)
+	invocation:  term.'(' opt_params ')' 
+
+	'('  shift 28
+	.  reduce 17 (src line 57)
+
+
+state 28
+	invocation:  term '('.opt_params ')' 
+	opt_params: .    (28)
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'!'  shift 6
+	'('  shift 11
+	.  reduce 28 (src line 72)
+
+	opt_params  goto 43
+	params  goto 44
+	expr  goto 45
+	binary_expr  goto 4
+	unary_expr  goto 5
+	term  goto 7
+	invocation  goto 12
+	number  goto 8
+
+state 29
+	term:  '(' expr.')' 
+
+	')'  shift 46
+	.  error
+
+
+state 30
+	number:  '-' NUMBER.    (24)
+
+	.  reduce 24 (src line 66)
+
+
+state 31
+	exprs:  exprs ';' expr.    (2)
+
+	.  reduce 2 (src line 39)
+
+
+state 32
+	binary_expr:  binary_expr.AND binary_expr 
+	binary_expr:  binary_expr AND binary_expr.    (6)
+	binary_expr:  binary_expr.OR binary_expr 
+	binary_expr:  binary_expr.'<' binary_expr 
+	binary_expr:  binary_expr.LE binary_expr 
+	binary_expr:  binary_expr.'>' binary_expr 
+	binary_expr:  binary_expr.GE binary_expr 
+	binary_expr:  binary_expr.EQ binary_expr 
+	binary_expr:  binary_expr.'+' binary_expr 
+	binary_expr:  binary_expr.'-' binary_expr 
+	binary_expr:  binary_expr.'*' binary_expr 
+	binary_expr:  binary_expr.'/' binary_expr 
+
+	'<'  shift 18
+	LE  shift 19
+	'>'  shift 20
+	GE  shift 21
+	EQ  shift 22
+	'+'  shift 23
+	'-'  shift 24
+	'*'  shift 25
+	'/'  shift 26
+	.  reduce 6 (src line 45)
+
+
+state 33
+	binary_expr:  binary_expr.AND binary_expr 
+	binary_expr:  binary_expr.OR binary_expr 
+	binary_expr:  binary_expr OR binary_expr.    (7)
+	binary_expr:  binary_expr.'<' binary_expr 
+	binary_expr:  binary_expr.LE binary_expr 
+	binary_expr:  binary_expr.'>' binary_expr 
+	binary_expr:  binary_expr.GE binary_expr 
+	binary_expr:  binary_expr.EQ binary_expr 
+	binary_expr:  binary_expr.'+' binary_expr 
+	binary_expr:  binary_expr.'-' binary_expr 
+	binary_expr:  binary_expr.'*' binary_expr 
+	binary_expr:  binary_expr.'/' binary_expr 
+
+	AND  shift 16
+	'<'  shift 18
+	LE  shift 19
+	'>'  shift 20
+	GE  shift 21
+	EQ  shift 22
+	'+'  shift 23
+	'-'  shift 24
+	'*'  shift 25
+	'/'  shift 26
+	.  reduce 7 (src line 46)
+
+
+state 34
+	binary_expr:  binary_expr.AND binary_expr 
+	binary_expr:  binary_expr.OR binary_expr 
+	binary_expr:  binary_expr.'<' binary_expr 
+	binary_expr:  binary_expr '<' binary_expr.    (8)
+	binary_expr:  binary_expr.LE binary_expr 
+	binary_expr:  binary_expr.'>' binary_expr 
+	binary_expr:  binary_expr.GE binary_expr 
+	binary_expr:  binary_expr.EQ binary_expr 
+	binary_expr:  binary_expr.'+' binary_expr 
+	binary_expr:  binary_expr.'-' binary_expr 
+	binary_expr:  binary_expr.'*' binary_expr 
+	binary_expr:  binary_expr.'/' binary_expr 
+
+	'<'  error
+	LE  error
+	'>'  error
+	GE  error
+	EQ  error
+	'+'  shift 23
+	'-'  shift 24
+	'*'  shift 25
+	'/'  shift 26
+	.  reduce 8 (src line 47)
+
+
+state 35
+	binary_expr:  binary_expr.AND binary_expr 
+	binary_expr:  binary_expr.OR binary_expr 
+	binary_expr:  binary_expr.'<' binary_expr 
+	binary_expr:  binary_expr.LE binary_expr 
+	binary_expr:  binary_expr LE binary_expr.    (9)
+	binary_expr:  binary_expr.'>' binary_expr 
+	binary_expr:  binary_expr.GE binary_expr 
+	binary_expr:  binary_expr.EQ binary_expr 
+	binary_expr:  binary_expr.'+' binary_expr 
+	binary_expr:  binary_expr.'-' binary_expr 
+	binary_expr:  binary_expr.'*' binary_expr 
+	binary_expr:  binary_expr.'/' binary_expr 
+
+	'<'  error
+	LE  error
+	'>'  error
+	GE  error
+	EQ  error
+	'+'  shift 23
+	'-'  shift 24
+	'*'  shift 25
+	'/'  shift 26
+	.  reduce 9 (src line 48)
+
+
+state 36
+	binary_expr:  binary_expr.AND binary_expr 
+	binary_expr:  binary_expr.OR binary_expr 
+	binary_expr:  binary_expr.'<' binary_expr 
+	binary_expr:  binary_expr.LE binary_expr 
+	binary_expr:  binary_expr.'>' binary_expr 
+	binary_expr:  binary_expr '>' binary_expr.    (10)
+	binary_expr:  binary_expr.GE binary_expr 
+	binary_expr:  binary_expr.EQ binary_expr 
+	binary_expr:  binary_expr.'+' binary_expr 
+	binary_expr:  binary_expr.'-' binary_expr 
+	binary_expr:  binary_expr.'*' binary_expr 
+	binary_expr:  binary_expr.'/' binary_expr 
+
+	'<'  error
+	LE  error
+	'>'  error
+	GE  error
+	EQ  error
+	'+'  shift 23
+	'-'  shift 24
+	'*'  shift 25
+	'/'  shift 26
+	.  reduce 10 (src line 49)
+
+
+state 37
+	binary_expr:  binary_expr.AND binary_expr 
+	binary_expr:  binary_expr.OR binary_expr 
+	binary_expr:  binary_expr.'<' binary_expr 
+	binary_expr:  binary_expr.LE binary_expr 
+	binary_expr:  binary_expr.'>' binary_expr 
+	binary_expr:  binary_expr.GE binary_expr 
+	binary_expr:  binary_expr GE binary_expr.    (11)
+	binary_expr:  binary_expr.EQ binary_expr 
+	binary_expr:  binary_expr.'+' binary_expr 
+	binary_expr:  binary_expr.'-' binary_expr 
+	binary_expr:  binary_expr.'*' binary_expr 
+	binary_expr:  binary_expr.'/' binary_expr 
+
+	'<'  error
+	LE  error
+	'>'  error
+	GE  error
+	EQ  error
+	'+'  shift 23
+	'-'  shift 24
+	'*'  shift 25
+	'/'  shift 26
+	.  reduce 11 (src line 50)
+
+
+state 38
+	binary_expr:  binary_expr.AND binary_expr 
+	binary_expr:  binary_expr.OR binary_expr 
+	binary_expr:  binary_expr.'<' binary_expr 
+	binary_expr:  binary_expr.LE binary_expr 
+	binary_expr:  binary_expr.'>' binary_expr 
+	binary_expr:  binary_expr.GE binary_expr 
+	binary_expr:  binary_expr.EQ binary_expr 
+	binary_expr:  binary_expr EQ binary_expr.    (12)
+	binary_expr:  binary_expr.'+' binary_expr 
+	binary_expr:  binary_expr.'-' binary_expr 
+	binary_expr:  binary_expr.'*' binary_expr 
+	binary_expr:  binary_expr.'/' binary_expr 
+
+	'<'  error
+	LE  error
+	'>'  error
+	GE  error
+	EQ  error
+	'+'  shift 23
+	'-'  shift 24
+	'*'  shift 25
+	'/'  shift 26
+	.  reduce 12 (src line 51)
+
+
+state 39
+	binary_expr:  binary_expr.AND binary_expr 
+	binary_expr:  binary_expr.OR binary_expr 
+	binary_expr:  binary_expr.'<' binary_expr 
+	binary_expr:  binary_expr.LE binary_expr 
+	binary_expr:  binary_expr.'>' binary_expr 
+	binary_expr:  binary_expr.GE binary_expr 
+	binary_expr:  binary_expr.EQ binary_expr 
+	binary_expr:  binary_expr.'+' binary_expr 
+	binary_expr:  binary_expr '+' binary_expr.    (13)
+	binary_expr:  binary_expr.'-' binary_expr 
+	binary_expr:  binary_expr.'*' binary_expr 
+	binary_expr:  binary_expr.'/' binary_expr 
+
+	'*'  shift 25
+	'/'  shift 26
+	.  reduce 13 (src line 52)
+
+
+state 40
+	binary_expr:  binary_expr.AND binary_expr 
+	binary_expr:  binary_expr.OR binary_expr 
+	binary_expr:  binary_expr.'<' binary_expr 
+	binary_expr:  binary_expr.LE binary_expr 
+	binary_expr:  binary_expr.'>' binary_expr 
+	binary_expr:  binary_expr.GE binary_expr 
+	binary_expr:  binary_expr.EQ binary_expr 
+	binary_expr:  binary_expr.'+' binary_expr 
+	binary_expr:  binary_expr.'-' binary_expr 
+	binary_expr:  binary_expr '-' binary_expr.    (14)
+	binary_expr:  binary_expr.'*' binary_expr 
+	binary_expr:  binary_expr.'/' binary_expr 
+
+	'*'  shift 25
+	'/'  shift 26
+	.  reduce 14 (src line 53)
+
+
+state 41
+	binary_expr:  binary_expr.AND binary_expr 
+	binary_expr:  binary_expr.OR binary_expr 
+	binary_expr:  binary_expr.'<' binary_expr 
+	binary_expr:  binary_expr.LE binary_expr 
+	binary_expr:  binary_expr.'>' binary_expr 
+	binary_expr:  binary_expr.GE binary_expr 
+	binary_expr:  binary_expr.EQ binary_expr 
+	binary_expr:  binary_expr.'+' binary_expr 
+	binary_expr:  binary_expr.'-' binary_expr 
+	binary_expr:  binary_expr.'*' binary_expr 
+	binary_expr:  binary_expr '*' binary_expr.    (15)
+	binary_expr:  binary_expr.'/' binary_expr 
+
+	.  reduce 15 (src line 54)
+
+
+state 42
+	binary_expr:  binary_expr.AND binary_expr 
+	binary_expr:  binary_expr.OR binary_expr 
+	binary_expr:  binary_expr.'<' binary_expr 
+	binary_expr:  binary_expr.LE binary_expr 
+	binary_expr:  binary_expr.'>' binary_expr 
+	binary_expr:  binary_expr.GE binary_expr 
+	binary_expr:  binary_expr.EQ binary_expr 
+	binary_expr:  binary_expr.'+' binary_expr 
+	binary_expr:  binary_expr.'-' binary_expr 
+	binary_expr:  binary_expr.'*' binary_expr 
+	binary_expr:  binary_expr.'/' binary_expr 
+	binary_expr:  binary_expr '/' binary_expr.    (16)
+
+	.  reduce 16 (src line 55)
+
+
+state 43
+	invocation:  term '(' opt_params.')' 
+
+	')'  shift 47
+	.  error
+
+
+state 44
+	opt_params:  params.    (27)
+	params:  params.',' expr 
+
+	','  shift 48
+	.  reduce 27 (src line 71)
+
+
+state 45
+	params:  expr.    (30)
+
+	.  reduce 30 (src line 75)
+
+
+state 46
+	term:  '(' expr ')'.    (22)
+
+	.  reduce 22 (src line 63)
+
+
+state 47
+	invocation:  term '(' opt_params ')'.    (26)
+
+	.  reduce 26 (src line 69)
+
+
+state 48
+	params:  params ','.expr 
+
+	ID  shift 10
+	NUMBER  shift 14
+	STRING  shift 9
+	'-'  shift 13
+	'!'  shift 6
+	'('  shift 11
+	.  error
+
+	expr  goto 49
+	binary_expr  goto 4
+	unary_expr  goto 5
+	term  goto 7
+	invocation  goto 12
+	number  goto 8
+
+state 49
+	params:  params ',' expr.    (29)
+
+	.  reduce 29 (src line 74)
+
+
+23 terminals, 11 nonterminals
+31 grammar rules, 50/8000 states
+0 shift/reduce, 0 reduce/reduce conflicts reported
+60 working sets used
+memory: parser 93/120000
+40 extra closures
+162 shift entries, 26 exceptions
+26 goto entries
+66 entries saved by goto default
+Optimizer space used: output 84/120000
+84 table entries, 5 zero
+maximum spread: 23, maximum offset: 48
