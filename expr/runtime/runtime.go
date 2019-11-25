@@ -52,11 +52,11 @@ type Expr []Instruction
 type Program struct {
 	ResultType types.Type
 
-	exprs      []Expr
-	funcs      []Func
-	strings    []string
-	consts     []Value
-	inputCount int
+	exprs   []Expr
+	funcs   []Func
+	strings []string
+	consts  []Value
+	inputs  []ValueType
 }
 
 type Runtime struct {
@@ -75,9 +75,17 @@ func NewRuntime(program *Program) *Runtime {
 func (r *Runtime) Run(exprIndex int, inputs []Value) (Value, error) {
 	r.stack = r.stack[:0]
 
-	if len(inputs) != r.program.inputCount {
-		return Value{}, fmt.Errorf("program expects %d inputs but %d were provided",
-			r.program.inputCount, len(inputs))
+	if len(inputs) != len(r.program.inputs) {
+		return Value{}, fmt.Errorf(
+			"program expects %d inputs but %d were provided",
+			len(r.program.inputs), len(inputs))
+	}
+	for i, input := range inputs {
+		if input.Type() != r.program.inputs[i] {
+			return Value{}, fmt.Errorf(
+				"program expects input index %d type %v but %v was provided",
+				i, r.program.inputs[i], input.Type())
+		}
 	}
 
 	exprInstr := r.program.exprs[exprIndex]
@@ -186,12 +194,10 @@ Loop:
 			panic("invalid op")
 		}
 	}
-
 	if len(r.stack) != 1 {
 		return Value{}, fmt.Errorf("invalid program: after execution stack len: %d",
 			len(r.stack))
 	}
-
 	return r.stack[0], nil
 }
 

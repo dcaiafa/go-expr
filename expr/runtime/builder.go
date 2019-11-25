@@ -1,14 +1,14 @@
 package runtime
 
 type Builder struct {
-	labels     []*Label
-	funcs      []Func
-	strings    []string
-	stringMap  map[string]int
-	instr      []Instruction
-	exprs      []Expr
-	consts     []Value
-	inputCount int
+	labels    []*Label
+	funcs     []Func
+	strings   []string
+	stringMap map[string]int
+	instr     []Instruction
+	exprs     []Expr
+	consts    []Value
+	inputs    []ValueType
 }
 
 func NewBuilder() *Builder {
@@ -17,10 +17,9 @@ func NewBuilder() *Builder {
 	}
 }
 
-func (b *Builder) NewInput() int {
-	inputIndex := b.inputCount
-	b.inputCount++
-	return inputIndex
+func (b *Builder) NewInput(t ValueType) int {
+	b.inputs = append(b.inputs, t)
+	return len(b.inputs) - 1
 }
 
 func (b *Builder) RegisterConst(v Value) int {
@@ -121,10 +120,10 @@ func (b *Builder) FinishExpr() {
 
 func (b *Builder) Build() *Program {
 	return &Program{
-		exprs:      b.exprs,
-		funcs:      b.funcs,
-		strings:    b.strings,
-		consts:     b.consts,
-		inputCount: b.inputCount,
+		exprs:   b.exprs,
+		funcs:   b.funcs,
+		strings: b.strings,
+		consts:  b.consts,
+		inputs:  b.inputs,
 	}
 }
