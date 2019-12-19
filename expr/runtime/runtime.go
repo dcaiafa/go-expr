@@ -59,6 +59,10 @@ type Program struct {
 	inputs  []ValueType
 }
 
+func (p *Program) ExprCount() int {
+	return len(p.exprs)
+}
+
 type Runtime struct {
 	program  *Program
 	stack    []Value
@@ -91,7 +95,7 @@ func (r *Runtime) Run(exprIndex int, inputs []Value) (Value, error) {
 	exprInstr := r.program.exprs[exprIndex]
 
 Loop:
-	for n := 0; n < len(exprInstr); n++ {
+	for n := 0; n < len(exprInstr); {
 		instr := exprInstr[n]
 		switch instr.op {
 		case PushNumber:
@@ -163,15 +167,18 @@ Loop:
 			r.push(NewBoolValue(res))
 		case Jump:
 			n = instr.extra
+			continue
 		case JumpIfTrue:
 			boolValue := r.pop()
 			if boolValue.Bool() {
 				n = instr.extra
+				continue
 			}
 		case JumpIfFalse:
 			boolValue := r.pop()
 			if !boolValue.Bool() {
 				n = instr.extra
+				continue
 			}
 		case Call:
 			argCount := instr.extra
@@ -193,6 +200,8 @@ Loop:
 		default:
 			panic("invalid op")
 		}
+
+		n++
 	}
 	if len(r.stack) != 1 {
 		return Value{}, fmt.Errorf("invalid program: after execution stack len: %d",

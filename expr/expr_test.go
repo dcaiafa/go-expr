@@ -127,7 +127,9 @@ func TestExpr_AndExpr(t *testing.T) {
 	run("1", "a && b", "a", true, "b", true, true)
 	run("2", "a && b", "a", true, "b", false, false)
 	run("3", "a && b", "a", false, "b", true, false)
-	run("3", "a && b", "a", false, "b", false, false)
+	run("4", "a && b", "a", false, "b", false, false)
+	run("5", "a && b && c", "a", true, "b", true, "c", false, false)
+	run("6", "a && b && c", "a", false, "b", true, "c", true, false)
 }
 
 func TestExpr_OrExpr(t *testing.T) {
@@ -140,7 +142,9 @@ func TestExpr_OrExpr(t *testing.T) {
 	run("1", "a || b", "a", true, "b", true, true)
 	run("2", "a || b", "a", true, "b", false, true)
 	run("3", "a || b", "a", false, "b", true, true)
-	run("3", "a || b", "a", false, "b", false, false)
+	run("4", "a || b", "a", false, "b", false, false)
+	run("5", "a || b || c", "a", true, "b", false, "c", false, true)
+	run("6", "a || b || c", "a", false, "b", false, "c", false, false)
 }
 
 func TestExpr_NegateExpr(t *testing.T) {
