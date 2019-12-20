@@ -3,7 +3,6 @@ package ast
 import (
 	"fmt"
 
-	"github.com/dcaiafa/go-expr/expr/exprerrors"
 	"github.com/dcaiafa/go-expr/expr/internal/context"
 	"github.com/dcaiafa/go-expr/expr/runtime"
 	"github.com/dcaiafa/go-expr/expr/types"
@@ -52,21 +51,19 @@ func (e *CallExpr) RunPass(ctx *context.Context, pass context.Pass) error {
 func (e *CallExpr) checkTypes() error {
 	fn, ok := e.receiver.Type().(*types.Function)
 	if !ok {
-		return fmt.Errorf("%w: receiver in call expression is not a function",
-			exprerrors.ErrSemantic)
+		return fmt.Errorf("receiver is not a function")
 	}
 
 	if len(fn.Args) != len(e.params.params) {
-		return fmt.Errorf(
-			"%w: function expected %d parameters but %d were provided",
-			exprerrors.ErrSemantic, len(fn.Args), len(e.params.params))
+		return fmt.Errorf("function expected %d parameters but %d were provided",
+			len(fn.Args), len(e.params.params))
 	}
 
 	for i, arg := range fn.Args {
 		if !arg.Equal(e.params.params[i].Type()) {
 			return fmt.Errorf(
-				"%w: parameter %d expected type is %v but %v was provided",
-				exprerrors.ErrSemantic, i, e.params.params[i].Type(), arg)
+				"parameter %d expected type is %v but %v was provided",
+				i, e.params.params[i].Type(), arg)
 		}
 	}
 

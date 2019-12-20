@@ -3,7 +3,6 @@ package ast
 import (
 	"fmt"
 
-	"github.com/dcaiafa/go-expr/expr/exprerrors"
 	"github.com/dcaiafa/go-expr/expr/internal/context"
 	"github.com/dcaiafa/go-expr/expr/runtime"
 	"github.com/dcaiafa/go-expr/expr/types"
@@ -105,32 +104,25 @@ func (e *BinaryExpr) checkTypes(ctx *context.Context) error {
 	switch e.op {
 	case Lt, Le, Gt, Ge:
 		if e.left.Type() != types.Number || e.right.Type() != types.Number {
-			return fmt.Errorf(
-				"%w: binary expression: expected number",
-				exprerrors.ErrSemantic)
+			return fmt.Errorf("operator requires number operands")
 		}
 		e.typ = types.Bool
 
 	case Plus, Minus, Times, Div:
 		if e.left.Type() != types.Number || e.right.Type() != types.Number {
-			return fmt.Errorf(
-				"%w: binary expression: expected number",
-				exprerrors.ErrSemantic)
+			return fmt.Errorf("operator requires number operands")
 		}
 		e.typ = types.Number
 
 	case Eq:
 		if e.left.Type() != e.right.Type() {
-			return fmt.Errorf(
-				"%w: binary expression: both sides must have the same type",
-				exprerrors.ErrSemantic)
+			return fmt.Errorf("invalid operation: mistmatched types %v and %v",
+				e.left.Type(), e.right.Type())
 		}
 		if e.left.Type() != types.String &&
 			e.left.Type() != types.Number &&
 			e.left.Type() != types.Bool {
-			return fmt.Errorf(
-				"%w: binary expression: expected string, number or bool",
-				exprerrors.ErrSemantic)
+			return fmt.Errorf("invalid operation: cannot compare type %v", e.left.Type())
 		}
 		e.typ = types.Bool
 

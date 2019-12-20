@@ -3,7 +3,6 @@ package ast
 import (
 	"fmt"
 
-	"github.com/dcaiafa/go-expr/expr/exprerrors"
 	"github.com/dcaiafa/go-expr/expr/internal/context"
 	"github.com/dcaiafa/go-expr/expr/runtime"
 	"github.com/dcaiafa/go-expr/expr/types"
@@ -58,9 +57,11 @@ func (e *OrExpr) RunPass(ctx *context.Context, pass context.Pass) error {
 }
 
 func (e *OrExpr) checkTypes(ctx *context.Context) error {
-	if e.left.Type() != types.Bool || e.right.Type() != types.Bool {
-		return fmt.Errorf("%w: both sides of a && operator must be of type 'bool'",
-			exprerrors.ErrSemantic)
+	if e.left.Type() != types.Bool {
+		return fmt.Errorf("left side of || is not bool")
+	}
+	if e.right.Type() != types.Bool {
+		return fmt.Errorf("right side of || is not bool")
 	}
 	return nil
 }

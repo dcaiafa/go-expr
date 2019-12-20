@@ -9,6 +9,7 @@ const (
 )
 
 type Type interface {
+	String() string
 	Equal(t Type) bool
 }
 
@@ -16,15 +17,28 @@ type Basic struct {
 	kind BasicKind
 }
 
+func (b *Basic) String() string {
+	switch b.kind {
+	case NumberKind:
+		return "number"
+	case StringKind:
+		return "string"
+	case BoolKind:
+		return "bool"
+	default:
+		return "invalid"
+	}
+}
+
+func (t *Basic) Equal(other Type) bool {
+	return t == other
+}
+
 var (
 	Number = &Basic{NumberKind}
 	String = &Basic{StringKind}
 	Bool   = &Basic{BoolKind}
 )
-
-func (t *Basic) Equal(other Type) bool {
-	return t == other
-}
 
 type Function struct {
 	Args []Type
@@ -48,4 +62,8 @@ func (f *Function) Equal(other Type) bool {
 		}
 	}
 	return true
+}
+
+func (f *Function) String() string {
+	return "function"
 }

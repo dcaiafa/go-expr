@@ -2,8 +2,6 @@ package symbol
 
 import (
 	"fmt"
-
-	"github.com/dcaiafa/go-expr/expr/exprerrors"
 )
 
 type Scope struct {
@@ -31,7 +29,7 @@ func (s *Scope) Has(name string) bool {
 func (s *Scope) Get(name string) (Symbol, error) {
 	sym := s.symbols[name]
 	if sym == nil {
-		return nil, exprerrors.NewErrUnknownSymbol(name)
+		return nil, fmt.Errorf("undefined: %v", name)
 	}
 	return sym, nil
 }

@@ -3,7 +3,6 @@ package ast
 import (
 	"fmt"
 
-	"github.com/dcaiafa/go-expr/expr/exprerrors"
 	"github.com/dcaiafa/go-expr/expr/internal/context"
 	"github.com/dcaiafa/go-expr/expr/runtime"
 	"github.com/dcaiafa/go-expr/expr/types"
@@ -41,8 +40,8 @@ func (p *Program) RunPass(ctx *context.Context, pass context.Pass) error {
 			if p.typ == nil {
 				p.typ = expr.Type()
 			} else if !expr.Type().Equal(p.typ) {
-				return fmt.Errorf("%w: all expressions in a program must have the same type",
-					exprerrors.ErrSemantic)
+				return fmt.Errorf("mistmatched expression types %v and %v",
+					p.typ, expr.Type())
 			}
 		}
 

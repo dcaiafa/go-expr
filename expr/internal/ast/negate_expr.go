@@ -3,7 +3,6 @@ package ast
 import (
 	"fmt"
 
-	"github.com/dcaiafa/go-expr/expr/exprerrors"
 	"github.com/dcaiafa/go-expr/expr/internal/context"
 	"github.com/dcaiafa/go-expr/expr/runtime"
 	"github.com/dcaiafa/go-expr/expr/types"
@@ -34,8 +33,7 @@ func (e *NegateExpr) RunPass(ctx *context.Context, pass context.Pass) error {
 	switch pass {
 	case context.CheckTypes:
 		if e.expr.Type() != types.Bool {
-			return fmt.Errorf("%w: ! operator requires bool operand",
-				exprerrors.ErrSemantic)
+			return fmt.Errorf("operator ! requires bool operand")
 		}
 
 	case context.Emit:
