@@ -235,7 +235,7 @@ func Benchmark1(b *testing.B) {
 			a := args[0].String()
 			return runtime.NewNumberValue(float64(len(a)))
 		},
-		types.String, types.Number,
+		types.Number, types.String,
 	)
 	compiler.RegisterInput("a", types.String)
 	compiler.RegisterInput("b", types.Number)

@@ -2,51 +2,59 @@ package types
 
 import "fmt"
 
-type BasicKind int
-
-const (
-	NumberKind BasicKind = iota
-	StringKind
-	BoolKind
-)
-
+// Type is the type of values and symbols in an expression.
 type Type interface {
 	fmt.Stringer
 	Equal(t Type) bool
 }
 
-type Basic struct {
-	kind BasicKind
+type basicKind int
+
+const (
+	numberKind basicKind = iota
+	stringKind
+	boolKind
+)
+
+type basic struct {
+	kind basicKind
 }
 
-func (b *Basic) String() string {
+var _ Type = (*basic)(nil)
+
+func (b *basic) String() string {
 	switch b.kind {
-	case NumberKind:
+	case numberKind:
 		return "number"
-	case StringKind:
+	case stringKind:
 		return "string"
-	case BoolKind:
+	case boolKind:
 		return "bool"
 	default:
 		return "invalid"
 	}
 }
 
-func (t *Basic) Equal(other Type) bool {
-	return t == other
+func (b *basic) Equal(other Type) bool {
+	return b == other
 }
 
+// Basic types.
 var (
-	Number = &Basic{NumberKind}
-	String = &Basic{StringKind}
-	Bool   = &Basic{BoolKind}
+	Number = &basic{numberKind}
+	String = &basic{stringKind}
+	Bool   = &basic{boolKind}
 )
 
+// Function is type of function symbols and values.
 type Function struct {
-	Args []Type
-	Ret  Type
+	Params []Type
+	Ret    Type
 }
 
+var _ Type = (*Function)(nil)
+
+// Equal determines whether 'other' is the same type as this type.
 func (f *Function) Equal(other Type) bool {
 	otherFn, ok := other.(*Function)
 	if !ok {
@@ -55,11 +63,11 @@ func (f *Function) Equal(other Type) bool {
 	if !f.Ret.Equal(otherFn.Ret) {
 		return false
 	}
-	if len(f.Args) != len(otherFn.Args) {
+	if len(f.Params) != len(otherFn.Params) {
 		return false
 	}
-	for i, arg := range f.Args {
-		if !arg.Equal(otherFn.Args[i]) {
+	for i, arg := range f.Params {
+		if !arg.Equal(otherFn.Params[i]) {
 			return false
 		}
 	}

@@ -54,16 +54,16 @@ func (e *CallExpr) checkTypes() error {
 		return fmt.Errorf("receiver is not a function")
 	}
 
-	if len(fn.Args) != len(e.params.params) {
+	if len(fn.Params) != len(e.params.params) {
 		return fmt.Errorf("function expected %d parameters but %d were provided",
-			len(fn.Args), len(e.params.params))
+			len(fn.Params), len(e.params.params))
 	}
 
-	for i, arg := range fn.Args {
+	for i, arg := range fn.Params {
 		if !arg.Equal(e.params.params[i].Type()) {
 			return fmt.Errorf(
 				"parameter %d expected type is %v but %v was provided",
-				i, e.params.params[i].Type(), arg)
+				i, arg, e.params.params[i].Type())
 		}
 	}
 

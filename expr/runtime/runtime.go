@@ -85,7 +85,7 @@ func (r *Runtime) Run(exprIndex int, inputs []Value) (Value, error) {
 			len(r.program.inputs), len(inputs))
 	}
 	for i, input := range inputs {
-		if input.Type() != r.program.inputs[i] {
+		if !input.Type().Equal(r.program.inputs[i]) {
 			return Value{}, fmt.Errorf(
 				"program expects input index %d type %v but %v was provided",
 				i, r.program.inputs[i], input.Type())
@@ -114,57 +114,48 @@ Loop:
 			r.push(inputs[instr.extra])
 		case Duplicate:
 			r.push(r.peek())
-		case Add, Subtract, Multiply, Divide:
-			right := r.pop()
-			left := r.pop()
-			var res float64
-			switch instr.op {
-			case Add:
-				res = left.num + right.num
-			case Subtract:
-				res = left.num - right.num
-			case Multiply:
-				res = left.num * right.num
-			case Divide:
-				res = left.num / right.num
-			}
-			r.push(NewNumberValue(res))
+		case Add:
+			right, left := r.pop(), r.pop()
+			r.push(NewNumberValue(left.num + right.num))
+		case Subtract:
+			right, left := r.pop(), r.pop()
+			r.push(NewNumberValue(left.num - right.num))
+		case Multiply:
+			right, left := r.pop(), r.pop()
+			r.push(NewNumberValue(left.num * right.num))
+		case Divide:
+			right, left := r.pop(), r.pop()
+			r.push(NewNumberValue(left.num / right.num))
 		case Negate:
 			v := r.pop()
 			r.push(NewBoolValue(!v.Bool()))
 		case And:
-			right := r.pop()
-			left := r.pop()
+			right, left := r.pop(), r.pop()
 			r.push(NewBoolValue(left.Bool() && right.Bool()))
 		case Or:
-			right := r.pop()
-			left := r.pop()
+			right, left := r.pop(), r.pop()
 			r.push(NewBoolValue(left.Bool() || right.Bool()))
 		case CompareEqBool:
-			right := r.pop()
-			left := r.pop()
+			right, left := r.pop(), r.pop()
 			r.push(NewBoolValue(left.Bool() == right.Bool()))
 		case CompareEqString:
-			right := r.pop()
-			left := r.pop()
+			right, left := r.pop(), r.pop()
 			r.push(NewBoolValue(left.String() == right.String()))
-		case CompareEq, CompareLT, CompareLE, CompareGT, CompareGE:
-			right := r.pop()
-			left := r.pop()
-			var res bool
-			switch instr.op {
-			case CompareEq:
-				res = left.num == right.num
-			case CompareLT:
-				res = left.num < right.num
-			case CompareLE:
-				res = left.num <= right.num
-			case CompareGT:
-				res = left.num > right.num
-			case CompareGE:
-				res = left.num >= right.num
-			}
-			r.push(NewBoolValue(res))
+		case CompareEq:
+			right, left := r.pop(), r.pop()
+			r.push(NewBoolValue(left.num == right.num))
+		case CompareLT:
+			right, left := r.pop(), r.pop()
+			r.push(NewBoolValue(left.num < right.num))
+		case CompareLE:
+			right, left := r.pop(), r.pop()
+			r.push(NewBoolValue(left.num <= right.num))
+		case CompareGT:
+			right, left := r.pop(), r.pop()
+			r.push(NewBoolValue(left.num > right.num))
+		case CompareGE:
+			right, left := r.pop(), r.pop()
+			r.push(NewBoolValue(left.num >= right.num))
 		case Jump:
 			n = instr.extra
 			continue
@@ -193,8 +184,12 @@ Loop:
 			fnValue := r.pop()
 			fn := r.program.funcs[fnValue.ExternalFunc()]
 			res := fn(r.callArgs)
+			fnType := fnValue.typ.(*types.Function)
+			if !res.Type().Equal(fnType.Ret) {
+				return Value{}, fmt.Errorf("function returned %v expected %v",
+					res.Type(), fnType.Ret)
+			}
 			r.push(res)
-
 		case Return:
 			break Loop
 		default:
