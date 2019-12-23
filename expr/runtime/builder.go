@@ -1,5 +1,7 @@
 package runtime
 
+import "github.com/dcaiafa/go-expr/expr/types"
+
 type Builder struct {
 	labels    []*Label
 	funcs     []Func
@@ -8,7 +10,7 @@ type Builder struct {
 	instr     []Instruction
 	exprs     []Expr
 	consts    []Value
-	inputs    []ValueType
+	inputs    []types.Type
 }
 
 func NewBuilder() *Builder {
@@ -17,7 +19,7 @@ func NewBuilder() *Builder {
 	}
 }
 
-func (b *Builder) NewInput(t ValueType) int {
+func (b *Builder) NewInput(t types.Type) int {
 	b.inputs = append(b.inputs, t)
 	return len(b.inputs) - 1
 }

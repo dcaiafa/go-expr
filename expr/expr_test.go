@@ -15,19 +15,19 @@ func runExpr(t *testing.T, input string, args ...interface{}) {
 	for len(args) > 2 {
 		symbol := args[0].(string)
 		value := args[1]
-		var typ runtime.ValueType
+		var typ types.Type
 		switch n := value.(type) {
 		case float64:
-			typ = runtime.Number
+			typ = types.Number
 			values = append(values, runtime.NewNumberValue(n))
 		case int:
-			typ = runtime.Number
+			typ = types.Number
 			values = append(values, runtime.NewNumberValue(float64(n)))
 		case string:
-			typ = runtime.String
+			typ = types.String
 			values = append(values, runtime.NewStringValue(n))
 		case bool:
-			typ = runtime.Bool
+			typ = types.Bool
 			values = append(values, runtime.NewBoolValue(n))
 		default:
 			panic("invalid type")
@@ -50,13 +50,13 @@ func runExpr(t *testing.T, input string, args ...interface{}) {
 
 	switch prog.ResultType {
 	case types.Number:
-		require.Equal(t, runtime.Number, res.Type())
+		require.Equal(t, types.Number, res.Type())
 		require.Equal(t, expected, res.Number())
 	case types.Bool:
-		require.Equal(t, runtime.Bool, res.Type())
+		require.Equal(t, types.Bool, res.Type())
 		require.Equal(t, expected, res.Bool())
 	case types.String:
-		require.Equal(t, runtime.String, res.Type())
+		require.Equal(t, types.String, res.Type())
 		require.Equal(t, expected, res.String())
 	default:
 		panic("invalid result/expectation")
@@ -183,7 +183,7 @@ func TestExpr_Func_Basic(t *testing.T) {
 			b := args[1].Number()
 			return runtime.NewNumberValue(a / b)
 		},
-		runtime.Number, runtime.Number, runtime.Number,
+		types.Number, types.Number, types.Number,
 	)
 
 	prog, err := compiler.Compile("div(15,3)")
@@ -192,7 +192,7 @@ func TestExpr_Func_Basic(t *testing.T) {
 	r := runtime.NewRuntime(prog)
 	res, err := r.Run(0, nil)
 	require.NoError(t, err)
-	require.Equal(t, runtime.Number, res.Type())
+	require.Equal(t, types.Number, res.Type())
 	require.Equal(t, float64(5), res.Number())
 }
 
@@ -205,10 +205,10 @@ func TestComplex1(t *testing.T) {
 			a := args[0].String()
 			return runtime.NewNumberValue(float64(len(a)))
 		},
-		runtime.Number, runtime.String,
+		types.Number, types.String,
 	)
-	compiler.RegisterInput("a", runtime.String)
-	compiler.RegisterInput("b", runtime.Number)
+	compiler.RegisterInput("a", types.String)
+	compiler.RegisterInput("b", types.Number)
 	compiler.RegisterConst("c", runtime.NewNumberValue(3))
 
 	prog, err := compiler.Compile("len(a) + c == b")
@@ -235,10 +235,10 @@ func Benchmark1(b *testing.B) {
 			a := args[0].String()
 			return runtime.NewNumberValue(float64(len(a)))
 		},
-		runtime.String, runtime.Number,
+		types.String, types.Number,
 	)
-	compiler.RegisterInput("a", runtime.String)
-	compiler.RegisterInput("b", runtime.Number)
+	compiler.RegisterInput("a", types.String)
+	compiler.RegisterInput("b", types.Number)
 	compiler.RegisterConst("c", runtime.NewNumberValue(3))
 
 	prog, err := compiler.Compile("len(a) + c == b")

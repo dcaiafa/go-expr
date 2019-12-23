@@ -56,7 +56,7 @@ type Program struct {
 	funcs   []Func
 	strings []string
 	consts  []Value
-	inputs  []ValueType
+	inputs  []types.Type
 }
 
 func (p *Program) ExprCount() int {

@@ -1,7 +1,6 @@
 package expr
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/dcaiafa/go-expr/expr/internal/context"
@@ -21,14 +20,10 @@ func NewCompiler() *Compiler {
 	}
 }
 
-func (c *Compiler) RegisterInput(name string, t runtime.ValueType) (int, error) {
-	typ, err := runtimeTypeToSymbolType(t)
-	if err != nil {
-		return 0, err
-	}
-	inputIndex := c.ctx.Builder.NewInput(t)
+func (c *Compiler) RegisterInput(name string, typ types.Type) (int, error) {
+	inputIndex := c.ctx.Builder.NewInput(typ)
 	inputSymbol := symbol.NewInputSymbol(name, typ, inputIndex)
-	err = c.ctx.GlobalScope.Add(inputSymbol)
+	err := c.ctx.GlobalScope.Add(inputSymbol)
 	if err != nil {
 		return 0, err
 	}
@@ -36,39 +31,22 @@ func (c *Compiler) RegisterInput(name string, t runtime.ValueType) (int, error) 
 }
 
 func (c *Compiler) RegisterConst(name string, v runtime.Value) error {
-	typ, err := runtimeTypeToSymbolType(v.Type())
-	if err != nil {
-		return err
-	}
-
 	constIndex := c.ctx.Builder.RegisterConst(v)
-	constSymbol := symbol.NewConstSymbol(name, typ, constIndex)
+	constSymbol := symbol.NewConstSymbol(name, v.Type(), constIndex)
 	return c.ctx.GlobalScope.Add(constSymbol)
 }
 
 func (c *Compiler) RegisterFunc(
 	name string,
 	fn runtime.Func,
-	ret runtime.ValueType,
-	args ...runtime.ValueType,
+	ret types.Type,
+	args ...types.Type,
 ) error {
-	var err error
-
 	fnType := &types.Function{
 		Args: make([]types.Type, len(args)),
+		Ret:  ret,
 	}
-
-	for i, arg := range args {
-		fnType.Args[i], err = runtimeTypeToSymbolType(arg)
-		if err != nil {
-			return err
-		}
-	}
-
-	fnType.Ret, err = runtimeTypeToSymbolType(ret)
-	if err != nil {
-		return err
-	}
+	copy(fnType.Args, args)
 
 	return c.registerFunc(name, fnType, fn)
 }
@@ -79,7 +57,7 @@ func (c *Compiler) registerFunc(
 	fn runtime.Func,
 ) error {
 	fnIndex := c.ctx.Builder.RegisterExternalFunc(fn)
-	v := runtime.NewExternalFuncValue(fnIndex)
+	v := runtime.NewExternalFuncValue(typ, fnIndex)
 	constIndex := c.ctx.Builder.RegisterConst(v)
 	fnSymbol := symbol.NewConstSymbol(name, typ, constIndex)
 	return c.ctx.GlobalScope.Add(fnSymbol)
@@ -116,17 +94,4 @@ func PrintAST(input string, out io.Writer) error {
 	}
 	context.NewGraphPrinter(out).PrintGraph(progAST)
 	return nil
-}
-
-func runtimeTypeToSymbolType(t runtime.ValueType) (types.Type, error) {
-	switch t {
-	case runtime.Bool:
-		return types.Bool, nil
-	case runtime.Number:
-		return types.Number, nil
-	case runtime.String:
-		return types.String, nil
-	default:
-		return nil, fmt.Errorf("unsupported type %v", t)
-	}
 }

@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 type BasicKind int
 
 const (
@@ -9,7 +11,7 @@ const (
 )
 
 type Type interface {
-	String() string
+	fmt.Stringer
 	Equal(t Type) bool
 }
 
