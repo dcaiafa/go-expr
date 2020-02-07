@@ -1,8 +1,12 @@
 package runtime
 
-import "github.com/dcaiafa/go-expr/expr/types"
+import (
+	"context"
 
-type Func func(args []Value) Value
+	"github.com/dcaiafa/go-expr/expr/types"
+)
+
+type Func func(ctx context.Context, args []Value) Value
 
 type Value struct {
 	typ   types.Type

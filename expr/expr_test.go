@@ -1,6 +1,7 @@
 package expr
 
 import (
+	"context"
 	"testing"
 
 	"github.com/dcaiafa/go-expr/expr/runtime"
@@ -45,7 +46,7 @@ func runExpr(t *testing.T, input string, args ...interface{}) {
 	require.NoError(t, err)
 
 	run := runtime.NewRuntime(prog)
-	res, err := run.Run(0, values)
+	res, err := run.Run(context.Background(), 0, values)
 	require.NoError(t, err)
 
 	switch prog.ResultType {
@@ -178,7 +179,8 @@ func TestExpr_Func_Basic(t *testing.T) {
 
 	compiler.RegisterFunc(
 		"div",
-		func(args []runtime.Value) runtime.Value {
+		func(ctx context.Context, args []runtime.Value) runtime.Value {
+			require.Equal(t, context.Background(), ctx)
 			a := args[0].Number()
 			b := args[1].Number()
 			return runtime.NewNumberValue(a / b)
@@ -190,7 +192,7 @@ func TestExpr_Func_Basic(t *testing.T) {
 	require.NoError(t, err)
 
 	r := runtime.NewRuntime(prog)
-	res, err := r.Run(0, nil)
+	res, err := r.Run(context.Background(), 0, nil)
 	require.NoError(t, err)
 	require.Equal(t, types.Number, res.Type())
 	require.Equal(t, float64(5), res.Number())
@@ -201,7 +203,7 @@ func TestComplex1(t *testing.T) {
 
 	compiler.RegisterFunc(
 		"len",
-		func(args []runtime.Value) runtime.Value {
+		func(ctx context.Context, args []runtime.Value) runtime.Value {
 			a := args[0].String()
 			return runtime.NewNumberValue(float64(len(a)))
 		},
@@ -221,7 +223,7 @@ func TestComplex1(t *testing.T) {
 		runtime.NewNumberValue(8),
 	}
 
-	res, err := r.Run(0, args)
+	res, err := r.Run(context.Background(), 0, args)
 	require.NoError(t, err)
 	require.True(t, res.Bool())
 }
@@ -231,7 +233,7 @@ func Benchmark1(b *testing.B) {
 
 	compiler.RegisterFunc(
 		"len",
-		func(args []runtime.Value) runtime.Value {
+		func(ctx context.Context, args []runtime.Value) runtime.Value {
 			a := args[0].String()
 			return runtime.NewNumberValue(float64(len(a)))
 		},
@@ -252,7 +254,7 @@ func Benchmark1(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		res, err := r.Run(0, args)
+		res, err := r.Run(context.Background(), 0, args)
 		if err != nil {
 			panic(err)
 		}

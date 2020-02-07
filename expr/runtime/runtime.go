@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/dcaiafa/go-expr/expr/types"
@@ -76,7 +77,7 @@ func NewRuntime(program *Program) *Runtime {
 	}
 }
 
-func (r *Runtime) Run(exprIndex int, inputs []Value) (Value, error) {
+func (r *Runtime) Run(ctx context.Context, exprIndex int, inputs []Value) (Value, error) {
 	r.stack = r.stack[:0]
 
 	if len(inputs) != len(r.program.inputs) {
@@ -183,7 +184,7 @@ Loop:
 			}
 			fnValue := r.pop()
 			fn := r.program.funcs[fnValue.ExternalFunc()]
-			res := fn(r.callArgs)
+			res := fn(ctx, r.callArgs)
 			fnType := fnValue.typ.(*types.Function)
 			if !res.Type().Equal(fnType.Ret) {
 				return Value{}, fmt.Errorf("function returned %v expected %v",
