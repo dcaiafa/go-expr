@@ -6,51 +6,75 @@ import (
 	"github.com/dcaiafa/go-expr/expr/types"
 )
 
-type Func func(ctx context.Context, args []Value) Value
+type FuncFn func(ctx context.Context, args []Value) Value
+
+type Func struct {
+	Type types.Type
+	Func FuncFn
+}
+
+type RawValue struct {
+	num float64
+	obj interface{}
+}
+
+func NewRawNumber(v float64) RawValue {
+	return RawValue{num: v}
+}
+
+func NewRawBool(v bool) RawValue {
+	num := float64(0)
+	if v {
+		num = 1
+	}
+	return NewRawNumber(num)
+}
+
+func NewRawObject(v interface{}) RawValue {
+	return RawValue{obj: v}
+}
+
+func (v RawValue) Bool() bool {
+	return v.num != 0
+}
+
+func (v RawValue) Number() float64 {
+	return v.num
+}
+
+func (v RawValue) String() string {
+	return v.obj.(string)
+}
+
+func (v RawValue) Object() interface{} {
+	return v.obj
+}
 
 type Value struct {
-	typ   types.Type
-	other int
-	num   float64
-	str   string
-}
-
-func NewBoolValue(v bool) Value {
-	vint := 0
-	if v {
-		vint = 1
-	}
-	return Value{typ: types.Bool, other: vint}
-}
-
-func NewNumberValue(v float64) Value {
-	return Value{typ: types.Number, num: v}
-}
-
-func NewStringValue(v string) Value {
-	return Value{typ: types.String, str: v}
-}
-
-func NewExternalFuncValue(typ types.Type, fnIndex int) Value {
-	return Value{typ: typ, other: fnIndex}
+	RawValue
+	typ types.Type
 }
 
 func (v Value) Type() types.Type {
 	return v.typ
 }
 
-func (v Value) Bool() bool {
-	return v.other != 0
+func NewNumber(v float64) Value {
+	return Value{typ: types.Number, RawValue: NewRawNumber(v)}
 }
 
-func (v Value) Number() float64 {
-	return v.num
+func NewBool(v bool) Value {
+	num := float64(0)
+	if v {
+		num = 1
+	}
+	return Value{typ: types.Bool, RawValue: NewRawNumber(num)}
 }
 
-func (v Value) String() string {
-	return v.str
+func NewObject(typ types.Type, v interface{}) Value {
+	return Value{typ: typ, RawValue: NewRawObject(v)}
 }
 
-func (v Value) ExternalFunc() int {
-	return v.other
+func NewString(v string) Value {
+	return NewObject(types.String, v)
 }

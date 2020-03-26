@@ -1,13 +1,17 @@
 package runtime
 
-import "github.com/dcaiafa/go-expr/expr/types"
+import (
+	"log"
+
+	"github.com/dcaiafa/go-expr/expr/types"
+)
 
 // Builder builds a Program using low level primitives.
 type Builder struct {
 	labels    []*Label
-	funcs     []Func
 	strings   []string
 	stringMap map[string]int
+	values    []interface{}
 	instr     []Instruction
 	exprs     []Expr
 	consts    []Value
@@ -16,8 +20,49 @@ type Builder struct {
 
 // NewBuilder creates a new Builder.
 func NewBuilder() *Builder {
-	return &Builder{
+	b := &Builder{
 		stringMap: make(map[string]int),
+	}
+
+	b.registerInternalFunc(
+		InternalInStringArray,
+		&types.Function{
+			Params: []types.Type{
+				types.String,
+				&types.Array{ElementType: types.String},
+			},
+			Ret: types.Bool,
+		},
+		internalInStringArray)
+
+	b.registerInternalFunc(
+		InternalInNumberArray,
+		&types.Function{
+			Params: []types.Type{
+				types.Number,
+				&types.Array{ElementType: types.Number},
+			},
+			Ret: types.Bool,
+		},
+		internalInNumberArray)
+
+	return b
+}
+
+func (b *Builder) registerInternalFunc(
+	constIndex int,
+	fnType *types.Function,
+	fn FuncFn,
+) {
+	obj := NewObject(
+		fnType,
+		&Func{
+			Type: fnType,
+			Func: fn,
+		})
+	ndx := b.NewConst(obj)
+	if ndx != constIndex {
+		log.Fatalf("could not register internal function %v", constIndex)
 	}
 }
 
@@ -34,14 +79,6 @@ func (b *Builder) NewConst(v Value) int {
 	constIndex := len(b.consts)
 	b.consts = append(b.consts, v)
 	return constIndex
-}
-
-// NewExternalFunc creates a new external function that can be referenced in a
-// Call instruction.
-func (b *Builder) NewExternalFunc(fn Func) int {
-	funcIndex := len(b.funcs)
-	b.funcs = append(b.funcs, fn)
-	return funcIndex
 }
 
 // NewLabel creates a new label that can be used in EmitJump. The label is
@@ -88,6 +125,11 @@ func (b *Builder) EmitPushString(str string) {
 	b.addInstr(Instruction{op: PushString, extra: strIndex})
 }
 
+func (b *Builder) EmitPushValue(v interface{}) {
+	valueIndex := b.newConstValue(v)
+	b.addInstr(Instruction{op: PushValue, extra: valueIndex})
+}
+
 // EmitPushBool emits a PushBool instruction.
 func (b *Builder) EmitPushBool(v bool) {
 	extra := 0
@@ -95,6 +137,10 @@ func (b *Builder) EmitPushBool(v bool) {
 		extra = 1
 	}
 	b.addInstr(Instruction{op: PushBool, extra: extra})
+}
+
+func (b *Builder) EmitPushArray(elemCount int) {
+	b.addInstr(Instruction{op: PushArray, extra: elemCount})
 }
 
 // EmitJump emits a Jump, JumpIfTrue or JumpIfFalse instruction.
@@ -137,7 +183,6 @@ func (b *Builder) FinishExpr() {
 func (b *Builder) Build() *Program {
 	return &Program{
 		exprs:   b.exprs,
-		funcs:   b.funcs,
 		strings: b.strings,
 		consts:  b.consts,
 		inputs:  b.inputs,
@@ -152,4 +197,9 @@ func (b *Builder) newString(str string) int {
 		b.stringMap[str] = index
 	}
 	return index
+}
+
+func (b *Builder) newConstValue(v interface{}) int {
+	b.values = append(b.values, v)
+	return len(b.values) - 1
 }

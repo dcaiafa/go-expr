@@ -2,12 +2,15 @@ package expr
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/dcaiafa/go-expr/expr/runtime"
 	"github.com/dcaiafa/go-expr/expr/types"
 	"github.com/stretchr/testify/require"
 )
+
+var compileError = errors.New("compile error expected")
 
 func runExpr(t *testing.T, input string, args ...interface{}) {
 	compiler := NewCompiler()
@@ -20,16 +23,16 @@ func runExpr(t *testing.T, input string, args ...interface{}) {
 		switch n := value.(type) {
 		case float64:
 			typ = types.Number
-			values = append(values, runtime.NewNumberValue(n))
+			values = append(values, runtime.NewNumber(n))
 		case int:
 			typ = types.Number
-			values = append(values, runtime.NewNumberValue(float64(n)))
+			values = append(values, runtime.NewNumber(float64(n)))
 		case string:
 			typ = types.String
-			values = append(values, runtime.NewStringValue(n))
+			values = append(values, runtime.NewString(n))
 		case bool:
 			typ = types.Bool
-			values = append(values, runtime.NewBoolValue(n))
+			values = append(values, runtime.NewBool(n))
 		default:
 			panic("invalid type")
 		}
@@ -43,6 +46,13 @@ func runExpr(t *testing.T, input string, args ...interface{}) {
 	}
 
 	prog, err := compiler.Compile(input)
+	if expected == compileError {
+		if err == nil {
+			t.Fatal("compilation error expected, but it succeeded")
+		} else {
+			return
+		}
+	}
 	require.NoError(t, err)
 
 	run := runtime.NewRuntime(prog)
@@ -174,6 +184,30 @@ func TestExpr_Precedence(t *testing.T) {
 	runExpr(t, "2*3 * (2 + 3) - 5", 25)
 }
 
+func TestExpr_InExpr(t *testing.T) {
+	run := func(name, input string, args ...interface{}) {
+		t.Run(name, func(t *testing.T) {
+			runExpr(t, input, args...)
+		})
+	}
+
+	run("int_1", "a in [1, 2, 3]", "a", 2, true)
+	run("int_2", "a in [1, 2, 3]", "a", 5, false)
+	run("int_3", "9+7 in [1, 16, 3]", true)
+	run("int_4", "9+7 in [1, 17, 3]", false)
+	run("int_5", "1<2 && 9+7 in [1, 10 + 6, 3]", true)
+	run("int_6", "a in [1, b, 3]", "a", 10, "b", 10, true)
+	run("int_7", "a in [1, b, 3]", "a", 10, "b", 11, false)
+
+	run("str_1", `a in ["foo", "bar"]`, "a", "foo", true)
+	run("str_2", `a in ["foo", "bar"]`, "a", "fruit", false)
+	run("str_2", `a in [b, "bar"]`, "a", "fruit", "b", "fruit", true)
+	run("str_2", `a in [b, "bar"]`, "a", "fruit", "b", "meat", false)
+
+	run("error_mismatched_types", `1 in ["foo"]`, compileError)
+	run("error_empty_literal", `1 in []`, compileError)
+}
+
 func TestExpr_Func_Basic(t *testing.T) {
 	compiler := NewCompiler()
 
@@ -183,7 +217,7 @@ func TestExpr_Func_Basic(t *testing.T) {
 			require.Equal(t, context.Background(), ctx)
 			a := args[0].Number()
 			b := args[1].Number()
-			return runtime.NewNumberValue(a / b)
+			return runtime.NewNumber(a / b)
 		},
 		types.Number, types.Number, types.Number,
 	)
@@ -205,13 +239,13 @@ func TestComplex1(t *testing.T) {
 		"len",
 		func(ctx context.Context, args []runtime.Value) runtime.Value {
 			a := args[0].String()
-			return runtime.NewNumberValue(float64(len(a)))
+			return runtime.NewNumber(float64(len(a)))
 		},
 		types.Number, types.String,
 	)
 	compiler.RegisterInput("a", types.String)
 	compiler.RegisterInput("b", types.Number)
-	compiler.RegisterConst("c", runtime.NewNumberValue(3))
+	compiler.RegisterConst("c", runtime.NewNumber(3))
 
 	prog, err := compiler.Compile("len(a) + c == b")
 	require.NoError(t, err)
@@ -219,8 +253,8 @@ func TestComplex1(t *testing.T) {
 	r := runtime.NewRuntime(prog)
 
 	args := []runtime.Value{
-		runtime.NewStringValue("hello"),
-		runtime.NewNumberValue(8),
+		runtime.NewString("hello"),
+		runtime.NewNumber(8),
 	}
 
 	res, err := r.Run(context.Background(), 0, args)
@@ -235,13 +269,13 @@ func Benchmark1(b *testing.B) {
 		"len",
 		func(ctx context.Context, args []runtime.Value) runtime.Value {
 			a := args[0].String()
-			return runtime.NewNumberValue(float64(len(a)))
+			return runtime.NewNumber(float64(len(a)))
 		},
 		types.Number, types.String,
 	)
 	compiler.RegisterInput("a", types.String)
 	compiler.RegisterInput("b", types.Number)
-	compiler.RegisterConst("c", runtime.NewNumberValue(3))
+	compiler.RegisterConst("c", runtime.NewNumber(3))
 
 	prog, err := compiler.Compile("len(a) + c == b")
 	require.NoError(b, err)
@@ -249,8 +283,8 @@ func Benchmark1(b *testing.B) {
 	r := runtime.NewRuntime(prog)
 
 	args := []runtime.Value{
-		runtime.NewStringValue("hello"),
-		runtime.NewNumberValue(8),
+		runtime.NewString("hello"),
+		runtime.NewNumber(8),
 	}
 
 	for i := 0; i < b.N; i++ {

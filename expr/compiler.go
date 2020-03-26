@@ -46,7 +46,7 @@ func (c *Compiler) RegisterConst(name string, v runtime.Value) error {
 // registration.
 func (c *Compiler) RegisterFunc(
 	name string,
-	fn runtime.Func,
+	fn runtime.FuncFn,
 	ret types.Type,
 	args ...types.Type,
 ) error {
@@ -61,10 +61,12 @@ func (c *Compiler) RegisterFunc(
 func (c *Compiler) registerFunc(
 	name string,
 	typ *types.Function,
-	fn runtime.Func,
+	fn runtime.FuncFn,
 ) error {
-	fnIndex := c.ctx.Builder.NewExternalFunc(fn)
-	v := runtime.NewExternalFuncValue(typ, fnIndex)
+	v := runtime.NewObject(typ, &runtime.Func{
+		Type: typ,
+		Func: fn,
+	})
 	constIndex := c.ctx.Builder.NewConst(v)
 	fnSymbol := symbol.NewConstSymbol(name, typ, constIndex)
 	return c.ctx.GlobalScope.Add(fnSymbol)
@@ -88,10 +90,8 @@ func (c *Compiler) Compile(expr string) (*runtime.Program, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	prog := c.ctx.Builder.Build()
 	prog.ResultType = progAST.Type()
-
 	return prog, nil
 }
 

@@ -9,6 +9,10 @@ import (
 	"github.com/dcaiafa/go-expr/expr/internal/ast"
 )
 
+var keywords = map[string]int{
+	"in": kIN,
+}
+
 type lex struct {
 	Program *ast.Program
 
@@ -73,7 +77,7 @@ func (l *lex) scan(lval *yySymType) int {
 		case '"':
 			l.unread()
 			return l.scanQuotedString(lval)
-		case '+', '-', '*', '/', ';', '(', ')', ',', '!':
+		case '+', '-', '*', '/', ';', '(', ')', ',', '!', '[', ']':
 			return int(r)
 		default:
 			if isNumber(r) {
@@ -108,6 +112,11 @@ func (l *lex) scanIdentifier(lval *yySymType) int {
 	}
 
 	lval.str = l.buf.String()
+
+	keyword, ok := keywords[lval.str]
+	if ok {
+		return keyword
+	}
 
 	return ID
 }

@@ -11,7 +11,8 @@ type Type interface {
 type basicKind int
 
 const (
-	numberKind basicKind = iota
+	voidKind basicKind = iota
+	numberKind
 	stringKind
 	boolKind
 )
@@ -24,6 +25,8 @@ var _ Type = (*basic)(nil)
 
 func (b *basic) String() string {
 	switch b.kind {
+	case voidKind:
+		return "void"
 	case numberKind:
 		return "number"
 	case stringKind:
@@ -41,6 +44,7 @@ func (b *basic) Equal(other Type) bool {
 
 // Basic types.
 var (
+	Void   = &basic{voidKind}
 	Number = &basic{numberKind}
 	String = &basic{stringKind}
 	Bool   = &basic{boolKind}
@@ -76,4 +80,22 @@ func (f *Function) Equal(other Type) bool {
 
 func (f *Function) String() string {
 	return "function"
+}
+
+type Array struct {
+	ElementType Type
+}
+
+var _ Type = (*Array)(nil)
+
+func (a *Array) Equal(other Type) bool {
+	otherArray, ok := other.(*Array)
+	if !ok {
+		return false
+	}
+	return a.ElementType.Equal(otherArray.ElementType)
+}
+
+func (a *Array) String() string {
+	return "array of " + a.ElementType.String()
 }

@@ -16,16 +16,18 @@ import (
 }
 
 %token LEXERR
-%token ID
+%token ID kIN
 %token <num> NUMBER
 %token <str> STRING
 %token <str> ID
 
 %type <ast> exprs opt_params params
 %type <expr> expr binary_expr unary_expr term invocation number
+%type <expr> array_literal array_elems
 
 %left OR
 %left AND
+%nonassoc kIN
 %nonassoc '<' LE '>' GE EQ
 %left '+' '-'
 %left '*' '/'
@@ -34,10 +36,10 @@ import (
 
 %%
 
-program: exprs { yylex.(*lex).Program = $1.(*ast.Program) }
+program: exprs                            { yylex.(*lex).Program = $1.(*ast.Program) }
 
-exprs: exprs ';' expr  { $1.(*ast.Program).AddExpr($3.(ast.Expr)) }
-     | expr            { $$ = ast.NewProgram($1.(ast.Expr)) }
+exprs: exprs ';' expr                     { $1.(*ast.Program).AddExpr($3.(ast.Expr)) }
+     | expr                               { $$ = ast.NewProgram($1.(ast.Expr)) }
 
 expr: binary_expr 
 
@@ -53,23 +55,30 @@ binary_expr: unary_expr
            | binary_expr '-' binary_expr  { $$ = ast.NewBinaryExpr($1, ast.Minus, $3) }
            | binary_expr '*' binary_expr  { $$ = ast.NewBinaryExpr($1, ast.Times, $3) }
            | binary_expr '/' binary_expr  { $$ = ast.NewBinaryExpr($1, ast.Div, $3) }
+           | binary_expr kIN binary_expr  { $$ = ast.NewInExpr($1, $3) }
 
-unary_expr: '!' term { $$ = ast.NewNegateExpr($2) }
+unary_expr: '!' term                      { $$ = ast.NewNegateExpr($2) }
           | term    
 
 term: number
-    | STRING       { $$ = ast.NewLiteralExpr(types.String, $1) }
-    | ID           { $$ = ast.NewSimpleRefExpr($1) }
-    | '(' expr ')' { $$ = $2 }
+    | STRING                              { $$ = ast.NewLiteralExpr(types.String, $1) }
+    | ID                                  { $$ = ast.NewSimpleRefExpr($1) }
     | invocation
+    | array_literal
+    | '(' expr ')'                        { $$ = $2 }
 
-number: '-' NUMBER { $$ = ast.NewLiteralExpr(types.Number, -$2) } 
-      | NUMBER     { $$ = ast.NewLiteralExpr(types.Number,  $1) } 
+number: '-' NUMBER                        { $$ = ast.NewLiteralExpr(types.Number, -$2) } 
+      | NUMBER                            { $$ = ast.NewLiteralExpr(types.Number,  $1) } 
 
-invocation: term '(' opt_params ')' { $$ = ast.NewCallExpr($1, $3.(*ast.Params)) }
+invocation: term '(' opt_params ')'       { $$ = ast.NewCallExpr($1, $3.(*ast.Params)) }
 
 opt_params: params
-          |         { $$ = &ast.Params{} }
+          |                               { $$ = &ast.Params{} }
 
-params: params ',' expr  { $1.(*ast.Params).AddParam($3.(ast.Expr)); $$ = $1 }
-      | expr             { $$ = ast.NewParams($1) }
+params: params ',' expr                   { $1.(*ast.Params).AddParam($3.(ast.Expr)); $$ = $1 }
+      | expr                              { $$ = ast.NewParams($1) }
+
+array_literal: '[' array_elems ']'        { $$ = $2 }
+
+array_elems: array_elems ',' expr         { $1.(*ast.ArrayLiteralExpr).AddElement($3.(ast.Expr)); $$= $1 }
+     | expr                               { $$ = ast.NewArrayLiteralExpr($1) }

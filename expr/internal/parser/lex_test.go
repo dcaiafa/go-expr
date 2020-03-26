@@ -51,4 +51,5 @@ func TestLex(t *testing.T) {
 	run("stringEscape", `"\"\\\""`, STRING, `"\"`)
 	run("id", `foobar1+_barFoo`, ID, "foobar1", int('+'), 0, ID, "_barFoo")
 	run("mix", `123+foobar`, NUMBER, float64(123), int('+'), 0, ID, "foobar")
+	run("in", "seg in [ONE, TWO]", ID, "seg", kIN, "in", int('['), 0, ID, "ONE", int(','), 0, ID, "TWO", int(']'), 0)
 }
