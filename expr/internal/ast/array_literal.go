@@ -2,8 +2,10 @@ package ast
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/dcaiafa/go-expr/expr/internal/context"
+	"github.com/dcaiafa/go-expr/expr/runtime"
 	"github.com/dcaiafa/go-expr/expr/types"
 )
 
@@ -29,11 +31,13 @@ func (e *ArrayLiteralExpr) Print(p *context.GraphPrinter) {
 func (e *ArrayLiteralExpr) RunPass(ctx *context.Context, pass context.Pass) error {
 	switch pass {
 	case context.CheckTypes:
-		err := e.runPassOnElements(ctx, pass)
-		if err != nil {
-			return err
+		for _, ast := range e.elements {
+			err := ast.RunPass(ctx, pass)
+			if err != nil {
+				return err
+			}
 		}
-		err = e.checkTypes()
+		err := e.checkTypes()
 		if err != nil {
 			return err
 		}
@@ -45,22 +49,14 @@ func (e *ArrayLiteralExpr) RunPass(ctx *context.Context, pass context.Pass) erro
 		}
 
 	default:
-		err := e.runPassOnElements(ctx, pass)
-		if err != nil {
-			return err
+		for _, ast := range e.elements {
+			err := ast.RunPass(ctx, pass)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	return nil
-}
-
-func (e *ArrayLiteralExpr) runPassOnElements(ctx *context.Context, pass context.Pass) error {
-	for _, ast := range e.elements {
-		err := ast.RunPass(ctx, pass)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -84,9 +80,38 @@ func (e *ArrayLiteralExpr) checkTypes() error {
 }
 
 func (e *ArrayLiteralExpr) emit(ctx *context.Context) error {
-	err := e.runPassOnElements(ctx, context.Emit)
-	if err != nil {
-		return err
+	optimize := true
+	for _, elem := range e.elements {
+		if elem.Value() == nil {
+			optimize = false
+			break
+		}
+	}
+	if optimize {
+		array := make([]runtime.RawValue, len(e.elements))
+		for i, elem := range e.elements {
+			switch v := elem.Value().(type) {
+			case float64:
+				array[i] = runtime.NewRawNumber(v)
+			case bool:
+				array[i] = runtime.NewRawBool(v)
+			case string:
+				array[i] = runtime.NewRawObject(v)
+			default:
+				log.Fatal("invalid array literal folded value")
+			}
+		}
+		arrayValue := runtime.NewObject(e.Type(), array)
+		arrayConst := ctx.Builder.NewConst(arrayValue)
+		ctx.Builder.EmitLoadConst(arrayConst)
+		return nil
+	}
+
+	for _, ast := range e.elements {
+		err := ast.RunPass(ctx, context.Emit)
+		if err != nil {
+			return err
+		}
 	}
 	ctx.Builder.EmitPushArray(len(e.elements))
 	return nil

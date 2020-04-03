@@ -10,9 +10,12 @@ import (
 )
 
 var keywords = map[string]int{
-	"in":    kIN,
-	"true":  kTRUE,
+	"and":   kAND,
 	"false": kFALSE,
+	"in":    kIN,
+	"not":   kNOT,
+	"or":    kOR,
+	"true":  kTRUE,
 }
 
 type lex struct {
@@ -76,10 +79,17 @@ func (l *lex) scan(lval *yySymType) int {
 				return '>'
 			}
 			return GE
+		case '!':
+			r = l.read()
+			if r != '=' {
+				l.unread()
+				return '!'
+			}
+			return NE
 		case '"':
 			l.unread()
 			return l.scanQuotedString(lval)
-		case '+', '-', '*', '/', ';', '(', ')', ',', '!', '[', ']':
+		case '+', '-', '*', '/', ';', '(', ')', ',', '[', ']':
 			return int(r)
 		default:
 			if isNumber(r) {

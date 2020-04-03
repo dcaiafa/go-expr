@@ -100,6 +100,17 @@ func TestExpr_BinaryExpr_Vars(t *testing.T) {
 	run("eq_bool2", "a == b", "a", true, "b", false, false)
 	run("eq_str", "a == b", "a", "foo", "b", "foo", true)
 	run("eq_str2", "a == b", "a", "foo", "b", "bar", false)
+	run("eq_arr_num1", "[a,b] == [a,b]", "a", 1, "b", 2, true)
+	run("eq_arr_num2", "[a,b] == [a,a]", "a", 1, "b", 2, false)
+	run("eq_arr_num3", "[a,b] == [a]", "a", 1, "b", 2, false)
+	run("eq_arr_bool1", "[t, f] == [t, f]", "t", true, "f", false, true)
+	run("eq_arr_bool2", "[t, t] == [t, f]", "t", true, "f", false, false)
+	run("eq_arr_bool3", "[t, t] == [t]", "t", true, "f", false, false)
+	run("eq_arr_str1", `[foo, bar] == [foo, bar]`, "foo", "foo", "bar", "bar", true)
+	run("eq_arr_str2", `[foo, bar] == [foo, foo]`, "foo", "foo", "bar", "bar", false)
+	run("eq_arr_str2", `[foo, bar] == [foo]`, "foo", "foo", "bar", "bar", false)
+	run("neq1", "a!=b", "a", 1, "b", 2, true)
+	run("neq2", "a!=b", "a", 1, "b", 1, false)
 }
 
 func TestExpr_BinaryExpr_Literals(t *testing.T) {
@@ -126,6 +137,17 @@ func TestExpr_BinaryExpr_Literals(t *testing.T) {
 	run("eq_num2", "3 == 2", false)
 	run("eq_str", `"foo" == "foo"`, true)
 	run("eq_str2", `"foo" == "bar"`, false)
+	run("eq_arr_num1", "[1,2] == [1,2]", true)
+	run("eq_arr_num2", "[1,2] == [1,3]", false)
+	run("eq_arr_num3", "[1,2] == [1]", false)
+	run("eq_arr_bool1", "[true, true] == [true, true]", true)
+	run("eq_arr_bool2", "[true, true] == [true, false]", false)
+	run("eq_arr_bool3", "[true, true] == [true]", false)
+	run("eq_arr_str1", `["foo", "bar"] == ["foo", "bar"]`, true)
+	run("eq_arr_str2", `["foo", "bar"] == ["foo", "bob"]`, false)
+	run("eq_arr_str2", `["foo", "bar"] == ["foo"]`, false)
+	run("neq1", "1!=2", true)
+	run("neq2", "1!=1", false)
 }
 
 func TestExpr_AndExpr(t *testing.T) {
@@ -146,6 +168,11 @@ func TestExpr_AndExpr(t *testing.T) {
 	run("fold2", "false && true", false)
 	run("fold3", "true && false", false)
 	run("fold4", "false && false", false)
+
+	run("keyword1", "true and true", true)
+	run("keyword2", "false and true", false)
+	run("keyword3", "true and false", false)
+	run("keyword4", "false and false", false)
 }
 
 func TestExpr_OrExpr(t *testing.T) {
@@ -166,6 +193,11 @@ func TestExpr_OrExpr(t *testing.T) {
 	run("fold2", "false || true", true)
 	run("fold3", "true || false", true)
 	run("fold4", "false || false", false)
+
+	run("fold1", "true or true", true)
+	run("fold2", "false or true", true)
+	run("fold3", "true or false", true)
+	run("fold4", "false or false", false)
 }
 
 func TestExpr_NegateExpr(t *testing.T) {
@@ -180,6 +212,9 @@ func TestExpr_NegateExpr(t *testing.T) {
 
 	run("fold1", "!true", false)
 	run("fold2", "!false", true)
+
+	run("keyword1", "not true", false)
+	run("keyword2", "not false", true)
 }
 
 func TestExpr_LiteralExpr(t *testing.T) {

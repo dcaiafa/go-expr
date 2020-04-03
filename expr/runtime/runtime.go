@@ -10,33 +10,40 @@ import (
 type Operation int
 
 const (
-	PushNumber Operation = iota
-	PushString
-	PushBool
-	PushArray
-	PushValue
+	InvalidOperation Operation = iota
+
+	Add
+	And
+	Call
+	CompareEqArrayBool
+	CompareEqArrayNumber
+	CompareEqArrayString
+	CompareEqBool
+	CompareEqNumber
+	CompareEqString
+	CompareGE
+	CompareGT
+	CompareLE
+	CompareLT
+	Divide
+	Duplicate
+	InArrayNumber
+	InArrayString
+	Jump
+	JumpIfFalse
+	JumpIfTrue
 	LoadConst
 	LoadInput
-	Duplicate
-	Add
-	Subtract
 	Multiply
-	Divide
 	Negate
-	And
 	Or
-	CompareEqBool
-	CompareEqString
-	CompareEq
-	CompareLT
-	CompareLE
-	CompareGT
-	CompareGE
-	Jump
-	JumpIfTrue
-	JumpIfFalse
-	Call
+	PushArray
+	PushBool
+	PushNumber
+	PushString
+	PushValue
 	Return
+	Subtract
 )
 
 type Instruction struct {
@@ -140,13 +147,19 @@ Loop:
 		case Or:
 			right, left := r.pop(), r.pop()
 			r.push(NewRawBool(left.Bool() || right.Bool()))
+		case CompareEqArrayBool:
+			r.compareEqArrayBool()
+		case CompareEqArrayNumber:
+			r.compareEqArrayNumber()
+		case CompareEqArrayString:
+			r.compareEqArrayString()
 		case CompareEqBool:
 			right, left := r.pop(), r.pop()
 			r.push(NewRawBool(left.Bool() == right.Bool()))
 		case CompareEqString:
 			right, left := r.pop(), r.pop()
 			r.push(NewRawBool(left.String() == right.String()))
-		case CompareEq:
+		case CompareEqNumber:
 			right, left := r.pop(), r.pop()
 			r.push(NewRawBool(left.num == right.num))
 		case CompareLT:
@@ -199,6 +212,31 @@ Loop:
 			r.push(res.RawValue)
 		case Return:
 			break Loop
+
+		case InArrayString:
+			right := r.pop().Object().([]RawValue)
+			left := r.pop().String()
+			res := false
+			for _, elem := range right {
+				if left == elem.String() {
+					res = true
+					break
+				}
+			}
+			r.push(NewRawBool(res))
+
+		case InArrayNumber:
+			right := r.pop().Object().([]RawValue)
+			left := r.pop().Number()
+			res := false
+			for _, elem := range right {
+				if left == elem.Number() {
+					res = true
+					break
+				}
+			}
+			r.push(NewRawBool(res))
+
 		default:
 			panic("invalid op")
 		}
@@ -226,4 +264,55 @@ func (r *Runtime) pop() RawValue {
 
 func (r *Runtime) peek() RawValue {
 	return r.stack[len(r.stack)-1]
+}
+
+func (r *Runtime) compareEqArrayBool() {
+	right := r.pop().Object().([]RawValue)
+	left := r.pop().Object().([]RawValue)
+	if len(left) != len(right) {
+		r.push(NewRawBool(false))
+		return
+	}
+	for i := range left {
+		if left[i].Bool() != right[i].Bool() {
+			r.push(NewRawBool(false))
+			return
+		}
+	}
+	r.push(NewRawBool(true))
+	return
+}
+
+func (r *Runtime) compareEqArrayNumber() {
+	right := r.pop().Object().([]RawValue)
+	left := r.pop().Object().([]RawValue)
+	if len(left) != len(right) {
+		r.push(NewRawBool(false))
+		return
+	}
+	for i := range left {
+		if left[i].Number() != right[i].Number() {
+			r.push(NewRawBool(false))
+			return
+		}
+	}
+	r.push(NewRawBool(true))
+	return
+}
+
+func (r *Runtime) compareEqArrayString() {
+	right := r.pop().Object().([]RawValue)
+	left := r.pop().Object().([]RawValue)
+	if len(left) != len(right) {
+		r.push(NewRawBool(false))
+		return
+	}
+	for i := range left {
+		if left[i].String() != right[i].String() {
+			r.push(NewRawBool(false))
+			return
+		}
+	}
+	r.push(NewRawBool(true))
+	return
 }

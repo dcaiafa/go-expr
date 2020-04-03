@@ -23,47 +23,7 @@ func NewBuilder() *Builder {
 	b := &Builder{
 		stringMap: make(map[string]int),
 	}
-
-	b.registerInternalFunc(
-		InternalInStringArray,
-		&types.Function{
-			Params: []types.Type{
-				types.String,
-				&types.Array{ElementType: types.String},
-			},
-			Ret: types.Bool,
-		},
-		internalInStringArray)
-
-	b.registerInternalFunc(
-		InternalInNumberArray,
-		&types.Function{
-			Params: []types.Type{
-				types.Number,
-				&types.Array{ElementType: types.Number},
-			},
-			Ret: types.Bool,
-		},
-		internalInNumberArray)
-
 	return b
-}
-
-func (b *Builder) registerInternalFunc(
-	constIndex int,
-	fnType *types.Function,
-	fn FuncFn,
-) {
-	obj := NewObject(
-		fnType,
-		&Func{
-			Type: fnType,
-			Func: fn,
-		})
-	ndx := b.NewConst(obj)
-	if ndx != constIndex {
-		log.Fatalf("could not register internal function %v", constIndex)
-	}
 }
 
 // NewInput creates a new input that can be referenced in a LoadInput

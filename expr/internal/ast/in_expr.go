@@ -31,43 +31,76 @@ func (e *InExpr) Print(p *context.GraphPrinter) {
 }
 
 func (e *InExpr) RunPass(ctx *context.Context, pass context.Pass) error {
-	if pass == context.Emit {
-		if e.left.Type().Equal(types.String) {
-			ctx.Builder.EmitLoadConst(runtime.InternalInStringArray)
-		} else if e.left.Type().Equal(types.Number) {
-			ctx.Builder.EmitLoadConst(runtime.InternalInNumberArray)
-		} else {
-			log.Fatal("unexpected left type")
-		}
-	}
-
-	err := e.left.RunPass(ctx, pass)
-	if err != nil {
-		return err
-	}
-
-	err = e.right.RunPass(ctx, pass)
-	if err != nil {
-		return err
-	}
-
 	switch pass {
 	case context.CheckTypes:
-		if !e.left.Type().Equal(types.String) &&
-			!e.left.Type().Equal(types.Number) {
-			return fmt.Errorf(
-				"only number and string supported by 'in' expression, "+
-					"but left side is %v", e.left.Type())
-		}
-		arrayType, ok := e.right.Type().(*types.Array)
-		if !ok || !e.left.Type().Equal(arrayType.ElementType) {
-			return fmt.Errorf(
-				"right side of 'in' expression should be array of %v, but it is %v",
-				e.left.Type(), e.right.Type())
+		err := e.checkTypes(ctx)
+		if err != nil {
+			return err
 		}
 
 	case context.Emit:
-		ctx.Builder.EmitCall(2)
+		err := e.emit(ctx)
+		if err != nil {
+			return err
+		}
+
+	default:
+		err := e.left.RunPass(ctx, pass)
+		if err != nil {
+			return err
+		}
+		err = e.right.RunPass(ctx, pass)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	return nil
+}
+
+func (e *InExpr) checkTypes(ctx *context.Context) error {
+	err := e.left.RunPass(ctx, context.CheckTypes)
+	if err != nil {
+		return err
+	}
+	err = e.right.RunPass(ctx, context.CheckTypes)
+	if err != nil {
+		return err
+	}
+
+	if !e.left.Type().Equal(types.String) && !e.left.Type().Equal(types.Number) {
+		return fmt.Errorf(
+			"only number and string supported by 'in' expression, "+
+				"but left side is %v", e.left.Type())
+	}
+
+	arrayType, ok := e.right.Type().(*types.Array)
+	if !ok || !e.left.Type().Equal(arrayType.ElementType) {
+		return fmt.Errorf(
+			"right side of 'in' expression should be array of %v, but it is %v",
+			e.left.Type(), e.right.Type())
+	}
+
+	return nil
+}
+
+func (e *InExpr) emit(ctx *context.Context) error {
+	err := e.left.RunPass(ctx, context.Emit)
+	if err != nil {
+		return err
+	}
+	err = e.right.RunPass(ctx, context.Emit)
+	if err != nil {
+		return err
+	}
+
+	if e.left.Type() == types.Number {
+		ctx.Builder.EmitOp(runtime.InArrayNumber)
+	} else if e.left.Type() == types.String {
+		ctx.Builder.EmitOp(runtime.InArrayString)
+	} else {
+		log.Fatal("unexpected left type")
 	}
 
 	return nil

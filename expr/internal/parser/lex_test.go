@@ -39,8 +39,10 @@ func TestLex(t *testing.T) {
 		})
 	}
 
-	run("logic", `&&|| > >= < <= ==`,
-		AND, 0, OR, 0, int('>'), 0, GE, 0, int('<'), 0, LE, 0, EQ, 0)
+	run("logic", `! &&|| > >= < <= == !=`,
+		int('!'), 0, AND, 0, OR, 0, int('>'), 0, GE, 0, int('<'), 0, LE, 0, EQ, 0, NE, 0)
+	run("logic_keywords", `and or not`,
+		kAND, "and", kOR, "or", kNOT, "not")
 	run("number0", "1234567890", NUMBER, float64(1234567890))
 	run("number1", "1", NUMBER, float64(1))
 	run("number2", "3.14", NUMBER, float64(3.14))

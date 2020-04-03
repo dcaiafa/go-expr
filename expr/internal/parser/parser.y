@@ -16,7 +16,7 @@ import (
 }
 
 %token LEXERR
-%token ID kTRUE kFALSE kIN 
+%token ID kTRUE kFALSE kIN kAND kOR kNOT
 %token <num> NUMBER
 %token <str> STRING
 %token <str> ID
@@ -25,10 +25,10 @@ import (
 %type <expr> expr binary_expr unary_expr term invocation number
 %type <expr> array_literal array_elems
 
-%left OR
-%left AND
+%left OR kOR
+%left AND kAND
 %nonassoc kIN
-%nonassoc '<' LE '>' GE EQ
+%nonassoc '<' LE '>' GE EQ NE
 %left '+' '-'
 %left '*' '/'
 
@@ -45,12 +45,15 @@ expr: binary_expr
 
 binary_expr: unary_expr
            | binary_expr AND binary_expr  { $$ = ast.NewAndExpr($1, $3) }
+           | binary_expr kAND binary_expr  { $$ = ast.NewAndExpr($1, $3) }
            | binary_expr OR binary_expr   { $$ = ast.NewOrExpr($1, $3) }
+           | binary_expr kOR binary_expr   { $$ = ast.NewOrExpr($1, $3) }
            | binary_expr '<' binary_expr  { $$ = ast.NewBinaryExpr($1, ast.Lt, $3) }
            | binary_expr LE binary_expr   { $$ = ast.NewBinaryExpr($1, ast.Le, $3) }
            | binary_expr '>' binary_expr  { $$ = ast.NewBinaryExpr($1, ast.Gt, $3) }
            | binary_expr GE binary_expr   { $$ = ast.NewBinaryExpr($1, ast.Ge, $3) }
            | binary_expr EQ binary_expr   { $$ = ast.NewBinaryExpr($1, ast.Eq, $3) }
+           | binary_expr NE binary_expr   { $$ = ast.NewBinaryExpr($1, ast.Ne, $3) }
            | binary_expr '+' binary_expr  { $$ = ast.NewBinaryExpr($1, ast.Plus, $3) }
            | binary_expr '-' binary_expr  { $$ = ast.NewBinaryExpr($1, ast.Minus, $3) }
            | binary_expr '*' binary_expr  { $$ = ast.NewBinaryExpr($1, ast.Times, $3) }
@@ -58,6 +61,7 @@ binary_expr: unary_expr
            | binary_expr kIN binary_expr  { $$ = ast.NewInExpr($1, $3) }
 
 unary_expr: '!' term                      { $$ = ast.NewNegateExpr($2) }
+          | kNOT term                     { $$ = ast.NewNegateExpr($2) }
           | term    
 
 term: number
