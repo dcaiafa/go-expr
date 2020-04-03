@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/dcaiafa/go-expr/expr/internal/context"
 	"github.com/dcaiafa/go-expr/expr/runtime"
@@ -67,16 +68,6 @@ func (e *BinaryExpr) Print(p *context.GraphPrinter) {
 }
 
 func (e *BinaryExpr) RunPass(ctx *context.Context, pass context.Pass) error {
-	err := e.left.RunPass(ctx, pass)
-	if err != nil {
-		return err
-	}
-
-	err = e.right.RunPass(ctx, pass)
-	if err != nil {
-		return err
-	}
-
 	switch pass {
 	case context.CheckTypes:
 		err := e.checkTypes(ctx)
@@ -90,13 +81,42 @@ func (e *BinaryExpr) RunPass(ctx *context.Context, pass context.Pass) error {
 			return err
 		}
 
+	case context.Fold:
+		err := e.fold(ctx)
+		if err != nil {
+			return err
+		}
+
 	default:
+		err := e.runPassChildren(ctx, pass)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (e *BinaryExpr) runPassChildren(ctx *context.Context, pass context.Pass) error {
+	err := e.left.RunPass(ctx, pass)
+	if err != nil {
+		return err
+	}
+
+	err = e.right.RunPass(ctx, pass)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
 func (e *BinaryExpr) checkTypes(ctx *context.Context) error {
+	err := e.runPassChildren(ctx, context.CheckTypes)
+	if err != nil {
+		return err
+	}
+
 	if e.left.Type() == nil || e.right.Type() == nil {
 		panic("sub-expressions have unevaluated types")
 	}
@@ -134,6 +154,16 @@ func (e *BinaryExpr) checkTypes(ctx *context.Context) error {
 }
 
 func (e *BinaryExpr) emit(ctx *context.Context) error {
+	if e.value != nil {
+		ctx.Builder.EmitPushBasicValue(e.value)
+		return nil
+	}
+
+	err := e.runPassChildren(ctx, context.Emit)
+	if err != nil {
+		return err
+	}
+
 	switch e.op {
 	case Lt:
 		ctx.Builder.EmitOp(runtime.CompareLT)
@@ -162,6 +192,50 @@ func (e *BinaryExpr) emit(ctx *context.Context) error {
 			ctx.Builder.EmitOp(runtime.CompareEqBool)
 		} else {
 			panic("unexpected type with == operator")
+		}
+	}
+
+	return nil
+}
+
+func (e *BinaryExpr) fold(ctx *context.Context) error {
+	err := e.runPassChildren(ctx, context.Fold)
+	if err != nil {
+		return err
+	}
+
+	if e.left.Value() == nil || e.right.Value() == nil {
+		return nil
+	}
+
+	switch e.op {
+	case Lt:
+		e.value = e.left.Value().(float64) < e.right.Value().(float64)
+	case Le:
+		e.value = e.left.Value().(float64) <= e.right.Value().(float64)
+	case Gt:
+		e.value = e.left.Value().(float64) > e.right.Value().(float64)
+	case Ge:
+		e.value = e.left.Value().(float64) >= e.right.Value().(float64)
+
+	case Plus:
+		e.value = e.left.Value().(float64) + e.right.Value().(float64)
+	case Minus:
+		e.value = e.left.Value().(float64) - e.right.Value().(float64)
+	case Times:
+		e.value = e.left.Value().(float64) * e.right.Value().(float64)
+	case Div:
+		e.value = e.left.Value().(float64) / e.right.Value().(float64)
+
+	case Eq:
+		if e.left.Type() == types.Number {
+			e.value = e.left.Value().(float64) == e.right.Value().(float64)
+		} else if e.left.Type() == types.String {
+			e.value = e.left.Value().(string) == e.right.Value().(string)
+		} else if e.left.Type() == types.Bool {
+			e.value = e.left.Value().(bool) == e.right.Value().(bool)
+		} else {
+			log.Fatal("unexpected type with == operator")
 		}
 	}
 

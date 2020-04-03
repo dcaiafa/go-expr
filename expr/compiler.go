@@ -78,18 +78,14 @@ func (c *Compiler) Compile(expr string) (*runtime.Program, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = progAST.RunPass(c.ctx, context.ResolveNames)
-	if err != nil {
-		return nil, err
+
+	for _, pass := range context.Passes {
+		err = progAST.RunPass(c.ctx, pass)
+		if err != nil {
+			return nil, err
+		}
 	}
-	err = progAST.RunPass(c.ctx, context.CheckTypes)
-	if err != nil {
-		return nil, err
-	}
-	err = progAST.RunPass(c.ctx, context.Emit)
-	if err != nil {
-		return nil, err
-	}
+
 	prog := c.ctx.Builder.Build()
 	prog.ResultType = progAST.Type()
 	return prog, nil

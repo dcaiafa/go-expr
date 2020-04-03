@@ -141,6 +141,11 @@ func TestExpr_AndExpr(t *testing.T) {
 	run("4", "a && b", "a", false, "b", false, false)
 	run("5", "a && b && c", "a", true, "b", true, "c", false, false)
 	run("6", "a && b && c", "a", false, "b", true, "c", true, false)
+
+	run("fold1", "true && true", true)
+	run("fold2", "false && true", false)
+	run("fold3", "true && false", false)
+	run("fold4", "false && false", false)
 }
 
 func TestExpr_OrExpr(t *testing.T) {
@@ -156,6 +161,11 @@ func TestExpr_OrExpr(t *testing.T) {
 	run("4", "a || b", "a", false, "b", false, false)
 	run("5", "a || b || c", "a", true, "b", false, "c", false, true)
 	run("6", "a || b || c", "a", false, "b", false, "c", false, false)
+
+	run("fold1", "true || true", true)
+	run("fold2", "false || true", true)
+	run("fold3", "true || false", true)
+	run("fold4", "false || false", false)
 }
 
 func TestExpr_NegateExpr(t *testing.T) {
@@ -167,6 +177,9 @@ func TestExpr_NegateExpr(t *testing.T) {
 
 	run("1", "!a", "a", true, false)
 	run("2", "!a", "a", false, true)
+
+	run("fold1", "!true", false)
+	run("fold2", "!false", true)
 }
 
 func TestExpr_LiteralExpr(t *testing.T) {
@@ -178,10 +191,12 @@ func TestExpr_LiteralExpr(t *testing.T) {
 
 	run("num", "3.14", 3.14)
 	run("string", `"foobar"`, "foobar")
+	run("true", "true", true)
+	run("false", "false", false)
 }
 
 func TestExpr_Precedence(t *testing.T) {
-	runExpr(t, "2*3 * (2 + 3) - 5", 25)
+	runExpr(t, "2 + 3*(2+3) - 5", 12)
 }
 
 func TestExpr_InExpr(t *testing.T) {

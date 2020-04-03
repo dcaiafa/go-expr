@@ -22,6 +22,10 @@ func (e *InExpr) Type() types.Type {
 	return types.Bool
 }
 
+func (e *InExpr) Value() interface{} {
+	return nil
+}
+
 func (e *InExpr) Print(p *context.GraphPrinter) {
 	p.PrintNode("in", e.left, e.right)
 }

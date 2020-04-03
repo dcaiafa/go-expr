@@ -10,7 +10,9 @@ import (
 )
 
 var keywords = map[string]int{
-	"in": kIN,
+	"in":    kIN,
+	"true":  kTRUE,
+	"false": kFALSE,
 }
 
 type lex struct {

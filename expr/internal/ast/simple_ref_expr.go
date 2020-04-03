@@ -21,6 +21,10 @@ func (e *SimpleRefExpr) Type() types.Type {
 	return e.sym.Type()
 }
 
+func (e *SimpleRefExpr) Value() interface{} {
+	return nil
+}
+
 func (e *SimpleRefExpr) Print(p *context.GraphPrinter) {
 	p.PrintNode(e.id)
 }

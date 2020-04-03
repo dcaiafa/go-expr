@@ -125,9 +125,17 @@ func (b *Builder) EmitPushString(str string) {
 	b.addInstr(Instruction{op: PushString, extra: strIndex})
 }
 
-func (b *Builder) EmitPushValue(v interface{}) {
-	valueIndex := b.newConstValue(v)
-	b.addInstr(Instruction{op: PushValue, extra: valueIndex})
+func (b *Builder) EmitPushBasicValue(v interface{}) {
+	switch v := v.(type) {
+	case float64:
+		b.EmitPushNumber(v)
+	case bool:
+		b.EmitPushBool(v)
+	case string:
+		b.EmitPushString(v)
+	default:
+		log.Fatal("invalid basic type")
+	}
 }
 
 // EmitPushBool emits a PushBool instruction.

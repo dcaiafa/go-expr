@@ -16,7 +16,7 @@ import (
 }
 
 %token LEXERR
-%token ID kIN
+%token ID kTRUE kFALSE kIN 
 %token <num> NUMBER
 %token <str> STRING
 %token <str> ID
@@ -62,6 +62,8 @@ unary_expr: '!' term                      { $$ = ast.NewNegateExpr($2) }
 
 term: number
     | STRING                              { $$ = ast.NewLiteralExpr(types.String, $1) }
+    | kTRUE                               { $$ = ast.NewLiteralExpr(types.Bool, true) }
+    | kFALSE                              { $$ = ast.NewLiteralExpr(types.Bool, false) }
     | ID                                  { $$ = ast.NewSimpleRefExpr($1) }
     | invocation
     | array_literal
