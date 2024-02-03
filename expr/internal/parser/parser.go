@@ -4,9 +4,12 @@ import "github.com/dcaiafa/go-expr/expr/internal/ast"
 
 //go:generate goyacc parser.y
 
-func Parse(input string) (*ast.Program, error) {
-	//yyDebug = 10
+func init() {
+	// Enable extra details in the error message returned by the parser.
 	yyErrorVerbose = true
+}
+
+func Parse(input string) (*ast.Program, error) {
 	l := newLex(input)
 	p := yyNewParser()
 	p.Parse(l)
